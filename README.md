@@ -31,11 +31,11 @@ type test struct {
 
 // Syncrhonous execution in series.
 e := async.Waterfall(async.Functions{
-        func(s *test, cb Callback) error {
+        func(s *test, cb async.Callback) error {
                 fmt.Println(s)
                 return cb(1)
         },
-        func(n int, cb Callback) error {
+        func(n int, cb async.Callback) error {
                 fmt.Println(n)
                 return cb(2, "String")
         },
@@ -60,10 +60,10 @@ var done = make(chan bool, 2)
 
 go func() {
         async.Waterfall(async.Functions{
-                func(cb Callback) error {
+                func(cb async.Callback) error {
                         return cb(1)
                 },
-                func(n int, cb Callback) error {
+                func(n int, cb async.Callback) error {
                         fmt.Println(n)
                         return cb()
                 },
@@ -77,10 +77,10 @@ go func() {
 
 go func() {
         async.Waterfall(async.Functions{
-                func(cb Callback) error {
+                func(cb async.Callback) error {
                         return cb(1)
                 },
-                func(n int, cb Callback) error {
+                func(n int, cb async.Callback) error {
                         fmt.Println(n)
                         time.Sleep(3 * time.Second)
                         return cb()
