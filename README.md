@@ -2,7 +2,7 @@
 
 async is a utility library for manipulating synchronous and asynchronous flows.
 
-### Installation
+### Install
 
 ```bash
 $ go get github.com/rafaeldias/async
