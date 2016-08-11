@@ -13,7 +13,7 @@ Waterfall(funcs async.Functions, args ...interface{}) error
 - ***args*** is a list of optional parameters that will be passed to the first function.
 
 ### Synchronous Usage:
-```
+```go
 import (
         "fmt"
         "github.com/rafaeldias/async"
@@ -45,7 +45,7 @@ if e != nil {
 ```
 
 ### Ascynchronous usage:
-````
+```go
 import (
         "fmt"
         "github.com/rafaeldias/async"
