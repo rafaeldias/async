@@ -22,6 +22,11 @@ type funcs struct {
 // it is interrupted by an error or isn't called by one of the
 // functions of the stack
 func (f *funcs) executeNext(args ...interface{}) error {
+	// end of stack, no need to proceed
+	if len(f.Stack) == 0 {
+		return nil
+	}
+
 	var (
 		// true if function has the last argument of type `Callback`
 		expectCallback bool
