@@ -12,7 +12,7 @@ type test struct {
 }
 
 func TestAsync(t *testing.T) {
-	e := Waterfall(Functions{
+	e := Waterfall(Tasks{
 		func(s *test, cb Callback) error {
 			fmt.Println(s)
 			return cb(1)
@@ -33,7 +33,7 @@ func TestAsync(t *testing.T) {
 }
 
 func TestAsyncError(t *testing.T) {
-	e := Waterfall(Functions{
+	e := Waterfall(Tasks{
 		func(cb Callback) error {
 			return cb(1)
 		},
@@ -58,7 +58,7 @@ func TestAsyncRoutine(t *testing.T) {
 	var done = make(chan bool, 2)
 
 	go func() {
-		Waterfall(Functions{
+		Waterfall(Tasks{
 			func(cb Callback) error {
 				return cb(1)
 			},
@@ -75,7 +75,7 @@ func TestAsyncRoutine(t *testing.T) {
 	}()
 
 	go func() {
-		Waterfall(Functions{
+		Waterfall(Tasks{
 			func(cb Callback) error {
 				return cb(1)
 			},

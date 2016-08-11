@@ -12,11 +12,11 @@ $ go get github.com/rafaeldias/async
 Waterfal function will execute all the functions in series. Usage:
 
 Signature:
+```go
+Waterfall(async.Tasks, ...interface{}) error
 ```
-Waterfall(funcs async.Functions, args ...interface{}) error
-```
-- ***funcs*** is a list of `func` that will be executed in series.
-- ***args*** is a list of optional parameters that will be passed to the first function.
+- `async.Tasks` is a list of tasks that will be executed in series.
+- `...interface{}` is optional parameters that will be passed to the first task.
 
 ### Synchronous Usage:
 ```go
@@ -30,7 +30,7 @@ type test struct {
 }
 
 // Syncrhonous execution in series.
-e := async.Waterfall(async.Functions{
+e := async.Waterfall(async.Tasks{
         func(s *test, cb async.Callback) error {
                 fmt.Println(s)
                 return cb(1)
@@ -59,7 +59,7 @@ import (
 var done = make(chan bool, 2)
 
 go func() {
-        async.Waterfall(async.Functions{
+        async.Waterfall(async.Tasks{
                 func(cb async.Callback) error {
                         return cb(1)
                 },
@@ -76,7 +76,7 @@ go func() {
 }()
 
 go func() {
-        async.Waterfall(async.Functions{
+        async.Waterfall(async.Tasks{
                 func(cb async.Callback) error {
                         return cb(1)
                 },

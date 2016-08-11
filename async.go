@@ -8,22 +8,22 @@ import (
 // Type used for callback
 type Callback func(...interface{}) error
 
-// Type used as a list of functions
-type Functions []interface{}
+// Type used as a list of tasks
+type Tasks []interface{}
 
 // funcs is the struct used to control the stack
 // of functions to be executed.
-type funcs struct {
+type tasks struct {
 	Stack []reflect.Value
 }
 
-// executeNext executes recursively each function of
+// executeNext executes recursively each task of
 // the stack until it reachs the bottom of the stack or
 // it is interrupted by an error or isn't called by one of the
-// functions of the stack
-func (f *funcs) executeNext(args ...interface{}) error {
+// tasks of the stack
+func (t *tasks) executeNext(args ...interface{}) error {
 	// end of stack, no need to proceed
-	if len(f.Stack) == 0 {
+	if len(t.Stack) == 0 {
 		return nil
 	}
 
@@ -31,9 +31,9 @@ func (f *funcs) executeNext(args ...interface{}) error {
 		// true if function has the last argument of type `Callback`
 		expectCallback bool
 		// Prepare callback that will be passed to function if `expectCallback` is true
-		next Callback = Callback(f.executeNext)
+		next Callback = Callback(t.executeNext)
 		// Get function to be executed
-		fn reflect.Value = f.Stack[0]
+		fn reflect.Value = t.Stack[0]
 		// Get type of the function to be executed
 		fnt reflect.Type = fn.Type()
 		// Arguments to be sent to the function
@@ -60,7 +60,7 @@ func (f *funcs) executeNext(args ...interface{}) error {
 	}
 
 	// Remove current function from the stack
-	f.Stack = f.Stack[1:len(f.Stack)]
+	t.Stack = t.Stack[1:len(t.Stack)]
 
 	resArgs := fn.Call(inArgs)
 
@@ -72,14 +72,14 @@ func (f *funcs) executeNext(args ...interface{}) error {
 	return nil
 }
 
-// Waterfall executes every function sequencially.
+// Waterfall executes every task sequencially.
 // The execution flow may be interrupted by not calling the  callback or returning an error.
-// `firstArgs` is a slice of parameters to be passed to the first function of the stack.
-func Waterfall(stack Functions, firstArgs ...interface{}) error {
-	// Init stack of functions
-	f := &funcs{}
+// `firstArgs` is a slice of parameters to be passed to the first task of the stack.
+func Waterfall(stack Tasks, firstArgs ...interface{}) error {
+	// Init stack of tasks
+	t := &tasks{}
 	// Checks if arguments passed are valid functions.
-	// If so, appends functions to `f.Stack`.
+	// If so, appends functions to `t.Stack`.
 	for i := 0; i < len(stack); i++ {
 		v := reflect.Indirect(reflect.ValueOf(stack[i]))
 
@@ -87,8 +87,8 @@ func Waterfall(stack Functions, firstArgs ...interface{}) error {
 			return fmt.Errorf("%T must be a Function ", v)
 		}
 
-		f.Stack = append(f.Stack, v)
+		t.Stack = append(t.Stack, v)
 	}
 
-	return f.executeNext(firstArgs...)
+	return t.executeNext(firstArgs...)
 }
