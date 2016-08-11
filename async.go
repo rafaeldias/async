@@ -36,31 +36,30 @@ func (f *funcs) executeNext(args ...interface{}) error {
 		fn reflect.Value = f.Stack[0]
 		// Get type of the function to be executed
 		fnt    reflect.Type = fn.Type()
+                // Arguments to be sent to the function
 		inArgs []reflect.Value
 	)
 
 	// If function expect any argument
-	// and length of arguments is less than the expected
-	if l := fnt.NumIn(); l > 0 && len(args) < l {
-		var cb Callback
+	if l := fnt.NumIn(); l > 0 {
 		// Get last argument of the function
 		lastArg := fnt.In(l - 1)
 
 		// Check if the last argument is a Callback
-		expectCallback = lastArg.AssignableTo(reflect.TypeOf(cb))
+		expectCallback = lastArg.AssignableTo(reflect.TypeOf(next))
 	}
 
 	// Transform arguments from interface{} to reflect.Value
 	for i := 0; i < len(args); i++ {
-		arg := args[i]
-
-		inArgs = append(inArgs, reflect.ValueOf(arg))
+		inArgs = append(inArgs, reflect.ValueOf(args[i]))
 	}
 
+        // If function is expecting a `Callback`, append next to the function arguments
 	if expectCallback {
 		inArgs = append(inArgs, reflect.ValueOf(next))
 	}
 
+        // Remove current function from the stack
 	f.Stack = f.Stack[1:len(f.Stack)]
 
 	resArgs := fn.Call(inArgs)
