@@ -2,6 +2,12 @@
 
 async is a utility library for manipulating synchronous and asynchronous flows.
 
+### Installation
+
+```bash
+$ go get github.com/rafaeldias/async
+```
+
 ### Waterfall
 Waterfal function will execute all the functions in series. Usage:
 
