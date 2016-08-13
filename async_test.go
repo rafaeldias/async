@@ -12,40 +12,45 @@ type test struct {
 }
 
 func TestAsync(t *testing.T) {
-	e := Waterfall(Tasks{
-		func(s *test, cb Callback) error {
+	res, e := Waterfall(Tasks{
+		func(s *test, cb Callback) {
 			fmt.Println(s)
-			return cb(1)
+			cb(nil, 1)
 		},
-		func(n int, cb Callback) error {
+		func(n int, cb Callback) {
 			fmt.Println(n)
-			return cb(2, "String")
+			cb(nil, 2, "String")
 		},
-		func(n2 int, s2 string) error {
+		func(n2 int, s2 string, cb Callback) {
 			fmt.Println(n2, s2)
-			return nil
+			cb(nil, n2, s2)
 		},
 	}, &test{20})
 
 	if e != nil {
 		t.Errorf("Error executing a Waterfall (%q)", e)
 	}
+
+	if len(res) > 0 {
+		fmt.Println(res[0], res[1])
+	}
+
 }
 
 func TestAsyncError(t *testing.T) {
-	e := Waterfall(Tasks{
-		func(cb Callback) error {
-			return cb(1)
+	_, e := Waterfall(Tasks{
+		func(cb Callback) {
+			cb(nil, 1)
 		},
-		func(n int, cb Callback) error {
+		func(n int, cb Callback) {
 			if n > 0 {
-				return errors.New("Error on second function")
+				cb(errors.New("Error on second function"))
+				return
 			}
-			return cb()
+			cb(nil)
 		},
-		func() error {
+		func() {
 			fmt.Println("Function never reached")
-			return nil
 		},
 	})
 
@@ -59,35 +64,33 @@ func TestAsyncRoutine(t *testing.T) {
 
 	go func() {
 		Waterfall(Tasks{
-			func(cb Callback) error {
-				return cb(1)
+			func(cb Callback) {
+				cb(nil, 1)
 			},
-			func(n int, cb Callback) error {
-				fmt.Println(n)
-				return cb()
+			func(n int, cb Callback) {
+				fmt.Println(nil, n)
+				cb(nil)
 			},
-			func() error {
+			func() {
 				fmt.Println("Last function")
 				done <- true
-				return nil
 			},
 		})
 	}()
 
 	go func() {
 		Waterfall(Tasks{
-			func(cb Callback) error {
-				return cb(1)
+			func(cb Callback) {
+				cb(nil, 1)
 			},
-			func(n int, cb Callback) error {
+			func(n int, cb Callback) {
 				fmt.Println(n)
 				time.Sleep(3 * time.Second)
-				return cb()
+				cb(nil)
 			},
-			func() error {
+			func() {
 				fmt.Println("Last function 2")
 				done <- true
-				return nil
 			},
 		})
 	}()

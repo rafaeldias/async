@@ -5,40 +5,68 @@ import (
 	"reflect"
 )
 
+var emptyResult []interface{}
+
 // Type used for callback
-type Callback func(...interface{}) error
+type Callback func(error, ...interface{})
 
 // Type used as a list of tasks
 type Tasks []interface{}
 
-// funcs is the struct used to control the stack
+// tasks is the struct used to control the stack
 // of functions to be executed.
 type tasks struct {
-	Stack []reflect.Value
+	Stack      []reflect.Value
+	lastResult []interface{}
+	execError  error
+}
+
+func (t *tasks) GetError() error {
+	return t.execError
+}
+
+func (t *tasks) GetLastResult() []interface{} {
+	return t.lastResult
+
 }
 
 // executeNext executes recursively each task of
 // the stack until it reachs the bottom of the stack or
 // it is interrupted by an error or isn't called by one of the
 // tasks of the stack
-func (t *tasks) executeNext(args ...interface{}) error {
-	// end of stack, no need to proceed
-	if len(t.Stack) == 0 {
-		return nil
-	}
-
+func (t *tasks) executeNext(e error, args ...interface{}) {
 	var (
 		// true if function has the last argument of type `Callback`
 		expectCallback bool
-		// Prepare callback that will be passed to function if `expectCallback` is true
-		next Callback = Callback(t.executeNext)
-		// Get function to be executed
-		fn reflect.Value = t.Stack[0]
-		// Get type of the function to be executed
-		fnt reflect.Type = fn.Type()
-		// Arguments to be sent to the function
+		// callback that will be passed to function if `expectCallback` is true
+		next Callback
+		// function to be executed
+		fn reflect.Value
+		// type of the function to be executed
+		fnt reflect.Type
+		// arguments to be sent to the function
 		inArgs []reflect.Value
 	)
+
+	// if and error occurred, stop calling the tasks of the stack
+	// and returns to the caller
+	if e != nil {
+		t.execError = e
+		return
+	}
+
+	// end of stack, no need to proceed
+	if len(t.Stack) == 0 {
+		t.lastResult = args
+		return
+	}
+
+	// Prepare callback that will be passed to function if `expectCallback` is true
+	next = Callback(t.executeNext)
+	// Get function to be executed
+	fn = t.Stack[0]
+	// Get type of the function to be executed
+	fnt = fn.Type()
 
 	// If function expect any argument
 	if l := fnt.NumIn(); l > 0 {
@@ -62,20 +90,13 @@ func (t *tasks) executeNext(args ...interface{}) error {
 	// Remove current function from the stack
 	t.Stack = t.Stack[1:len(t.Stack)]
 
-	resArgs := fn.Call(inArgs)
-
-	if lr := len(resArgs); lr > 0 {
-		if e, ok := resArgs[lr-1].Interface().(error); ok {
-			return e
-		}
-	}
-	return nil
+	fn.Call(inArgs)
 }
 
 // Waterfall executes every task sequencially.
 // The execution flow may be interrupted by not calling the  callback or returning an error.
 // `firstArgs` is a slice of parameters to be passed to the first task of the stack.
-func Waterfall(stack Tasks, firstArgs ...interface{}) error {
+func Waterfall(stack Tasks, firstArgs ...interface{}) ([]interface{}, error) {
 	// Init stack of tasks
 	t := &tasks{}
 	// Checks if arguments passed are valid functions.
@@ -84,11 +105,17 @@ func Waterfall(stack Tasks, firstArgs ...interface{}) error {
 		v := reflect.Indirect(reflect.ValueOf(stack[i]))
 
 		if v.Kind() != reflect.Func {
-			return fmt.Errorf("%T must be a Function ", v)
+			return emptyResult, fmt.Errorf("%T must be a Function ", v)
 		}
 
 		t.Stack = append(t.Stack, v)
 	}
 
-	return t.executeNext(firstArgs...)
+	t.executeNext(nil, firstArgs...)
+
+	if e := t.GetError(); e != nil {
+		return emptyResult, e
+	}
+
+	return t.GetLastResult(), nil
 }
