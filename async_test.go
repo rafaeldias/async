@@ -12,36 +12,39 @@ type test struct {
 }
 
 func TestAsync(t *testing.T) {
-	e := Waterfall(Tasks{
-		func(s *test, cb Callback) error {
+	res, e := Waterfall(Tasks{
+		func(s *test) (int, error) {
 			fmt.Println(s)
-			return cb(1)
+			return 1, nil
 		},
-		func(n int, cb Callback) error {
+		func(n int) (int, string, error) {
 			fmt.Println(n)
-			return cb(2, "String")
+			return 2, "string", nil
 		},
-		func(n2 int, s2 string) error {
+		func(n2 int, s2 string) (string, error) {
 			fmt.Println(n2, s2)
-			return nil
+			return "done", nil
 		},
 	}, &test{20})
 
 	if e != nil {
 		t.Errorf("Error executing a Waterfall (%q)", e)
 	}
+
+	fmt.Println(res)
 }
 
 func TestAsyncError(t *testing.T) {
-	e := Waterfall(Tasks{
-		func(cb Callback) error {
-			return cb(1)
+	res, e := Waterfall(Tasks{
+		func() (int, error) {
+			return 1, nil
 		},
-		func(n int, cb Callback) error {
+		func(n int) error {
+			fmt.Printf("if %d > 0 then error\n", n)
 			if n > 0 {
 				return errors.New("Error on second function")
 			}
-			return cb()
+			return nil
 		},
 		func() error {
 			fmt.Println("Function never reached")
@@ -52,6 +55,9 @@ func TestAsyncError(t *testing.T) {
 	if e != nil {
 		fmt.Println("Error executing a Waterfall (%q)", e)
 	}
+
+	// should be empty
+	fmt.Println(res)
 }
 
 func TestAsyncRoutine(t *testing.T) {
@@ -59,12 +65,12 @@ func TestAsyncRoutine(t *testing.T) {
 
 	go func() {
 		Waterfall(Tasks{
-			func(cb Callback) error {
-				return cb(1)
+			func() (int, error) {
+				return 1, nil
 			},
-			func(n int, cb Callback) error {
+			func(n int) error {
 				fmt.Println(n)
-				return cb()
+				return nil
 			},
 			func() error {
 				fmt.Println("Last function")
@@ -76,13 +82,13 @@ func TestAsyncRoutine(t *testing.T) {
 
 	go func() {
 		Waterfall(Tasks{
-			func(cb Callback) error {
-				return cb(1)
+			func() (int, error) {
+				return 1, nil
 			},
-			func(n int, cb Callback) error {
+			func(n int) error {
 				fmt.Println(n)
 				time.Sleep(3 * time.Second)
-				return cb()
+				return nil
 			},
 			func() error {
 				fmt.Println("Last function 2")
