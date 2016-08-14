@@ -21,14 +21,14 @@ var (
 type Errors []error
 
 func (e Errors) Error() string {
-	buff := bytes.NewBufferString(emptyStr)
+	b := bytes.NewBufferString(emptyStr)
 
 	for _, err := range e {
-		buff.WriteString(err.Error())
-		buff.WriteString(" ")
+		b.WriteString(err.Error())
+		b.WriteString(" ")
 	}
 
-	return strings.TrimSpace(buff.String())
+	return strings.TrimSpace(b.String())
 }
 
 // Type used as a list of tasks
@@ -105,7 +105,7 @@ func (t *tasks) ExecInParallel() error {
 		ls = len(t.Stack)
 		// Creates buffered channel for errors
 		ce = make(chan error, ls)
-		// Creates bufferd channel for controlling limit of CPU usage
+		// Creates bufferd channel for controlling CPU usage and guarantee Paralellism
 		climit = make(chan int, runtime.GOMAXPROCS(0))
 	)
 
