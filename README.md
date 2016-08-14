@@ -9,16 +9,50 @@ $ go get github.com/rafaeldias/async
 ```
 
 ### Waterfall
-Waterfal function will execute all the functions in series. Usage:
+Waterfall will execute all the functions in sequence, each returning their results to the next. If the last returning value of the function is of type `error`, then this value will not be passed to the next function, see [returning error](#returning-error) .
 
 Signature:
 ```go
-Waterfall(async.Tasks, ...interface{}) error
+Waterfall(async.Tasks, ...interface{}) ([]interface[}, error)
 ```
-- `async.Tasks` is a list of tasks that will be executed in series.
+- `async.Tasks` is a slice of functions that will be executed in series.
 - `...interface{}` is optional parameters that will be passed to the first task.
 
-### Synchronous Usage:
+Waterfall returns the results of the last task as a `[]interface{}` and `error`.
+
+
+
+### <a name="returning-error"></a>Returning error
+
+If an error occur in any of the functions to be executed, the next function will not be executed, and the error will be returned to the caller.
+
+In order for async to identify if an error occured, the error **must** be the last returning value of the function:
+
+```go
+_, err := async.Waterfall(async.Tasks{
+        func Task() (int, error) {
+                return 1, nil
+        },
+        func TaskWithError(i int) (string, error) {
+                if i > 0 {
+                    // This line will interrupt the execution flow
+                    return "", errors.New("Error occurred")
+                }
+                return "Ok", nil
+        },
+        // This function will not be executed.
+        func TaskNeverReached(s string) {
+            return
+        }
+});
+
+if err != nil {
+      fmt.Println(err.Error()); // "Error occurred"
+}
+```
+
+### Example
+
 ```go
 import (
         "fmt"
@@ -26,81 +60,31 @@ import (
 )
 
 type test struct {
-  ID uint
+        ID uint
 }
 
-// Syncrhonous execution in series.
-e := async.Waterfall(async.Tasks{
-        func(s *test, cb async.Callback) error {
-                fmt.Println(s)
-                return cb(1)
+// execution in series.
+res, e := async.Waterfall(async.Tasks{
+        func(t *test) (int, error) {
+                fmt.Println(t)
+                return return 1, nil
         },
-        func(n int, cb async.Callback) error {
+        func(n int) (int, string, error) {
                 fmt.Println(n)
-                return cb(2, "String")
+                return return 2, "String", nil
         },
-        func(n2 int, s2 string) error {
-                fmt.Println(n2, s2)
+        func(n2 int, s string) error {
+                fmt.Println(n2, s)
                 return nil
         },
 }, &test{20})
 
 if e != nil {
-    fmt.Printf("Error executing a Waterfall (%q)\n", e)
-}
-```
-
-### Ascynchronous usage:
-```go
-import (
-        "fmt"
-        "github.com/rafaeldias/async"
-)
-var done = make(chan bool, 2)
-
-go func() {
-        async.Waterfall(async.Tasks{
-                func(cb async.Callback) error {
-                        return cb(1)
-                },
-                func(n int, cb async.Callback) error {
-                        fmt.Println(n)
-                        return cb()
-                },
-                func() error {
-                        fmt.Println("Last function")
-                        done <- true
-                        return nil
-                },
-        })
-}()
-
-go func() {
-        async.Waterfall(async.Tasks{
-                func(cb async.Callback) error {
-                        return cb(1)
-                },
-                func(n int, cb async.Callback) error {
-                        fmt.Println(n)
-                        time.Sleep(3 * time.Second)
-                        return cb()
-                },
-                func() error {
-                        fmt.Println("Last function 2")
-                        done <- true
-                        return nil
-                },
-        })
-}()
-
-for i := 0; i < 2; i++ {
-        select {
-        case d := <-done:
-                fmt.Println("done routine", d)
-        }
+      fmt.Printf("Error executing a Waterfall (%v)\n", e)
 }
 
 ```
-# TODO :
+
+
+# Todo :
 - Implement `Parallel` with channels for concurrent executions.
-
