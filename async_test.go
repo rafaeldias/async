@@ -28,80 +28,102 @@ func TestAsync(t *testing.T) {
 	}, &test{20})
 
 	if e != nil {
-		t.Errorf("Error executing a Waterfall (%q)", e)
+		t.Errorf("Error executing a Waterfall (%s)", e.Error())
 	}
 
 	fmt.Println(res)
-}
 
-func TestAsyncError(t *testing.T) {
-	res, e := Waterfall(Tasks{
-		func() (int, error) {
-			return 1, nil
-		},
-		func(n int) error {
-			fmt.Printf("if %d > 0 then error\n", n)
-			if n > 0 {
-				return errors.New("Error on second function")
-			}
-			return nil
+	e = Parallel(Tasks{
+		func() {
+			fmt.Printf("Go")
 		},
 		func() error {
-			fmt.Println("Function never reached")
+			time.Sleep(1 * time.Second)
+			fmt.Printf("pher\n")
+			return errors.New("Parallel error pher")
+		},
+		func() error {
+			time.Sleep(1 * time.Second)
+			fmt.Printf("lang")
+			//return errors.New("Parallel error lang")
 			return nil
 		},
 	})
 
 	if e != nil {
-		fmt.Println("Error executing a Waterfall (%q)", e)
+		t.Errorf("Error executing a Waterfall (%s)", e.Error())
 	}
 
-	// should be empty
-	fmt.Println(res)
 }
 
-func TestAsyncRoutine(t *testing.T) {
-	var done = make(chan bool, 2)
-
-	go func() {
-		Waterfall(Tasks{
-			func() (int, error) {
-				return 1, nil
-			},
-			func(n int) error {
-				fmt.Println(n)
-				return nil
-			},
-			func() error {
-				fmt.Println("Last function")
-				done <- true
-				return nil
-			},
-		})
-	}()
-
-	go func() {
-		Waterfall(Tasks{
-			func() (int, error) {
-				return 1, nil
-			},
-			func(n int) error {
-				fmt.Println(n)
-				time.Sleep(3 * time.Second)
-				return nil
-			},
-			func() error {
-				fmt.Println("Last function 2")
-				done <- true
-				return nil
-			},
-		})
-	}()
-
-	for i := 0; i < 2; i++ {
-		select {
-		case d := <-done:
-			fmt.Println("done routine", d)
-		}
-	}
-}
+//func TestAsyncError(t *testing.T) {
+//	res, e := Waterfall(Tasks{
+//		func() (int, error) {
+//			return 1, nil
+//		},
+//		func(n int) error {
+//			fmt.Printf("if %d > 0 then error\n", n)
+//			if n > 0 {
+//				return errors.New("Error on second function")
+//			}
+//			return nil
+//		},
+//		func() error {
+//			fmt.Println("Function never reached")
+//			return nil
+//		},
+//	})
+//
+//	if e != nil {
+//		fmt.Println("Error executing a Waterfall (%q)", e)
+//	}
+//
+//	// should be empty
+//	fmt.Println(res)
+//}
+//
+//func TestAsyncRoutine(t *testing.T) {
+//	var done = make(chan bool, 2)
+//
+//	go func() {
+//		Waterfall(Tasks{
+//			func() (int, error) {
+//				return 1, nil
+//			},
+//			func(n int) error {
+//				fmt.Println(n)
+//				return nil
+//			},
+//			func() error {
+//				fmt.Println("Last function")
+//				done <- true
+//				return nil
+//			},
+//		})
+//	}()
+//
+//	go func() {
+//		Waterfall(Tasks{
+//			func() (int, error) {
+//				return 1, nil
+//			},
+//			func(n int) error {
+//				fmt.Println(n)
+//				time.Sleep(3 * time.Second)
+//				return nil
+//			},
+//			func() error {
+//				fmt.Println("Last function 2")
+//				done <- true
+//				return nil
+//			},
+//		})
+//	}()
+//
+//	for i := 0; i < 2; i++ {
+//		select {
+//		case d := <-done:
+//			fmt.Println("done routine", d)
+//		}
+//	}
+//}
