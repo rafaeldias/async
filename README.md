@@ -73,15 +73,17 @@ res, e := async.Waterfall(async.Tasks{
                 fmt.Println(n)
                 return return 2, "String", nil
         },
-        func(n2 int, s string) error {
-                fmt.Println(n2, s)
-                return nil
+        func(n2 int, s string) (int, error) {
+                fmt.Println(s)
+                return n2, nil
         },
 }, &test{20})
 
 if e != nil {
-      fmt.Printf("Error executing a Waterfall (%v)\n", e)
+      fmt.Printf("Error executing a Waterfall (%s)\n", e.Error())
 }
+
+fmt.Println(res)
 
 ```
 
