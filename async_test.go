@@ -44,7 +44,19 @@ func TestAsync(t *testing.T) {
 		},
 		func() error {
 			time.Sleep(1 * time.Second)
-			fmt.Printf("lang")
+			fmt.Printf("lang\n")
+			//return errors.New("Parallel error lang")
+			return nil
+		},
+		func() error {
+			time.Sleep(1 * time.Second)
+			fmt.Printf("lang\n")
+			//return errors.New("Parallel error lang")
+			return nil
+		},
+		func() error {
+			time.Sleep(1 * time.Second)
+			fmt.Printf("lang\n")
 			//return errors.New("Parallel error lang")
 			return nil
 		},

@@ -9,14 +9,14 @@ $ go get github.com/rafaeldias/async
 ```
 
 ### Waterfall
+```go
+Waterfall(tasks async.Tasks, args ...interface{}) ([]interface[}, error)
+```
+
 Waterfall will execute all the functions in sequence, each returning their results to the next. If the last returning value of the function is of type `error`, then this value will not be passed to the next function, see [returning error](#returning-error) .
 
-Signature:
-```go
-Waterfall(async.Tasks, ...interface{}) ([]interface[}, error)
-```
-- `async.Tasks` is a slice of functions that will be executed in series.
-- `...interface{}` is optional parameters that will be passed to the first task.
+- `tasks` is a slice of functions that will be executed in series.
+- `args` are optional parameters that will be passed to the first task.
 
 Waterfall returns the results of the last task as a `[]interface{}` and `error`.
 
