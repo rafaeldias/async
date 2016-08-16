@@ -87,6 +87,5 @@ fmt.Println(res)
 
 ```
 
-
-# Todo :
-- Implement `Parallel` with channels for concurrent executions.
+# License :
+Distributed under MIT License. See LICENSE file for more details.

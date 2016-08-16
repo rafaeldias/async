@@ -2,7 +2,6 @@ package async
 
 import (
 	"bytes"
-	"fmt"
 	"reflect"
 	"runtime"
 	"strings"
@@ -91,13 +90,13 @@ func (t *tasks) ExecInSeries(args ...reflect.Value) ([]interface{}, error) {
 }
 
 // ExecInParallel executes all functions in the stack in Parallel.
-func (t *tasks) ExecInParallel() error {
+func (t *tasks) ExecConcurrent(parallel bool) error {
 	var (
 		errs Errors
 		// Length of the tasks to execute
 		ls = len(t.Stack)
 		// Creates buffered channel for errors
-		ce = make(chan error)
+		ce = make(chan error, ls)
 		// Number of how many operating system threads Go will use to execute code
 		nCPU = runtime.GOMAXPROCS(0)
 		// Creates bufferd channel for controlling CPU usage and guarantee Paralellism
@@ -106,7 +105,7 @@ func (t *tasks) ExecInParallel() error {
 
 	for i := 0; i < ls; c, i = c+1, i+1 {
 		// If max operating system threads reached, consumes them before continuing
-		if c == nCPU {
+		if parallel && c == nCPU {
 			errs = consumeCh(errs, nCPU, ce)
 			c = 0
 		}
@@ -124,7 +123,6 @@ func (t *tasks) ExecInParallel() error {
 }
 
 func consumeCh(errs Errors, lr int, ce chan error) Errors {
-	fmt.Println("lr", lr)
 	// Consumes the errors from the channel
 	for i := 0; i < lr; i++ {
 		if e := <-ce; e != nil {

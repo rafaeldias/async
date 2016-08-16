@@ -3,6 +3,7 @@ package async
 import (
 	"errors"
 	"fmt"
+	"runtime"
 	"testing"
 	"time"
 )
@@ -12,7 +13,7 @@ type test struct {
 }
 
 func TestAsync(t *testing.T) {
-	res, e := Waterfall(Tasks{
+	_, e := Waterfall(Tasks{
 		func(s *test) (int, error) {
 			fmt.Println(s)
 			return 1, nil
@@ -31,9 +32,42 @@ func TestAsync(t *testing.T) {
 		t.Errorf("Error executing a Waterfall (%s)", e.Error())
 	}
 
-	fmt.Println(res)
+	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	e = Parallel(Tasks{
+		func() {
+			fmt.Printf("Go")
+		},
+		func() error {
+			time.Sleep(1 * time.Second)
+			fmt.Printf("pher\n")
+			return errors.New("Parallel error pher")
+		},
+		func() error {
+			time.Sleep(5 * time.Second)
+			fmt.Printf("lang\n")
+			//return errors.New("Parallel error lang")
+			return nil
+		},
+		/*func() error {
+			time.Sleep(2 * time.Second)
+			fmt.Printf("lang\n")
+			//return errors.New("Parallel error lang")
+			return nil
+		},
+		func() error {
+			time.Sleep(7 * time.Second)
+			fmt.Printf("lang\n")
+			//return errors.New("Parallel error lang")
+			return nil
+		},*/
+	})
+
+	/*if e != nil {
+		t.Errorf("Error executing a Waterfall (%s)", e.Error())
+	}
+
+	e = Concurrent(Tasks{
 		func() {
 			fmt.Printf("Go")
 		},
@@ -60,11 +94,7 @@ func TestAsync(t *testing.T) {
 			//return errors.New("Parallel error lang")
 			return nil
 		},
-	})
-
-	if e != nil {
-		t.Errorf("Error executing a Waterfall (%s)", e.Error())
-	}
+	})*/
 
 }
 

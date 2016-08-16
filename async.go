@@ -30,6 +30,14 @@ func Waterfall(stack Tasks, firstArgs ...interface{}) ([]interface{}, error) {
 }
 
 func Parallel(stack Tasks) error {
+	return execConcurrentStack(stack, true)
+}
+
+func Concurrent(stack Tasks) error {
+	return execConcurrentStack(stack, false)
+}
+
+func execConcurrentStack(stack Tasks, parallel bool) error {
 	var (
 		err error
 		t   *tasks = &tasks{}
@@ -41,7 +49,7 @@ func Parallel(stack Tasks) error {
 	if err != nil {
 		return err
 	}
-	return t.ExecInParallel()
+	return t.ExecConcurrent(parallel)
 }
 
 // Loop through the stack of Tasks and check if they are valid functions.
