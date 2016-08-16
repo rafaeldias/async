@@ -67,11 +67,11 @@ type test struct {
 res, e := async.Waterfall(async.Tasks{
         func(t *test) (int, error) {
                 fmt.Println(t)
-                return return 1, nil
+                return 1, nil
         },
         func(n int) (int, string, error) {
                 fmt.Println(n)
-                return return 2, "String", nil
+                return 2, "String", nil
         },
         func(n2 int, s string) (int, error) {
                 fmt.Println(s)
