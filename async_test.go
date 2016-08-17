@@ -8,8 +8,6 @@ import (
 	"time"
 )
 
-// fib returns a function that returns
-// previous and current Fibonacci numbers respectively.
 func fib(p, c int) (int, int) {
 	return c, p + c
 }
@@ -17,16 +15,18 @@ func fib(p, c int) (int, int) {
 func TestAsync(t *testing.T) {
 	fmt.Println("Testing `Waterfall`")
 
-	_, e := Waterfall(Tasks{
+	res, e := Waterfall(Tasks{
 		fib, fib, fib,
-		func(p, c int) {
-			fmt.Println(p, c)
+		func(p, c int) int {
+			return c
 		},
 	}, 0, 1)
 
 	if e != nil {
 		t.Errorf("Error executing a Waterfall (%s)", e.Error())
 	}
+
+	fmt.Println("Waterfall result :", res[0].(int))
 
 	fmt.Printf("\nTesting `Parallel` with `runtime.GOMAXPROCS(2)`\n")
 
