@@ -198,5 +198,5 @@ func main() {
 }
 ```
 
-# License :
+# License
 Distributed under MIT License. See LICENSE file for more details.
