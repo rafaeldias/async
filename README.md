@@ -29,10 +29,11 @@ In order for async to identify if an error occured, the error **must** be the la
 
 ```go
 _, err := async.Waterfall(async.Tasks{
-        func Task() (int, error) {
+        func () (int, error) {
                 return 1, nil
         },
-        func TaskWithError(i int) (string, error) {
+        // Function with error
+        func (i int) (string, error) {
                 if i > 0 {
                     // This line will interrupt the execution flow
                     return "", errors.New("Error occurred")
@@ -40,7 +41,7 @@ _, err := async.Waterfall(async.Tasks{
                 return "Ok", nil
         },
         // This function will not be executed.
-        func TaskNeverReached(s string) {
+        func (s string) {
             return
         }
 });
