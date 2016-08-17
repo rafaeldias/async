@@ -29,15 +29,15 @@ func Waterfall(stack Tasks, firstArgs ...interface{}) ([]interface{}, error) {
 	return t.ExecInSeries(args...)
 }
 
-func Parallel(stack Tasks) error {
+func Parallel(stack Tasks) (Results, error) {
 	return execConcurrentStack(stack, true)
 }
 
-func Concurrent(stack Tasks) error {
+func Concurrent(stack Tasks) (Results, error) {
 	return execConcurrentStack(stack, false)
 }
 
-func execConcurrentStack(stack Tasks, parallel bool) error {
+func execConcurrentStack(stack Tasks, parallel bool) (Results, error) {
 	var (
 		err error
 		t   *tasks = &tasks{}
@@ -47,7 +47,7 @@ func execConcurrentStack(stack Tasks, parallel bool) error {
 	t.Stack, err = validFuncs(stack)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 	return t.ExecConcurrent(parallel)
 }

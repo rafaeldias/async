@@ -23,8 +23,62 @@ func (e Errors) Error() string {
 	return strings.TrimSpace(b.String())
 }
 
+type Results interface {
+	Index(int) []interface{}
+	Key(string) []interface{}
+	Len() int
+	Keys() []string
+}
+
+type sliceResults [][]interface{}
+
+func (s sliceResults) Index(i int) []interface{} {
+	return s[i]
+}
+
+func (s sliceResults) Len() int {
+	return len(s)
+}
+
+func (s sliceResults) Keys() []string {
+	panic("Cannot get map keys from Slice")
+}
+
+func (s sliceResults) Key(k string) []interface{} {
+	panic("Cannot get map key from Slice")
+}
+
+type mapResults map[string][]interface{}
+
+func (m mapResults) Index(i int) []interface{} {
+	panic("Cannot get index from Map")
+}
+
+func (m mapResults) Len() int {
+	return len(m)
+}
+
+func (m mapResults) Keys() []string {
+	var keys = make([]string, len(m))
+
+	i := 0
+	for k := range m {
+		keys[i] = k
+		i++
+	}
+
+	return keys
+}
+
+func (m mapResults) Key(k string) []interface{} {
+	return m[k]
+}
+
 // Type used as a list of tasks
 type Tasks []interface{}
+
+// Type used as a map of tasks
+type MapTasks map[string]interface{}
 
 // funcs is the struct used to control the stack
 // of functions to be executed.
@@ -90,9 +144,10 @@ func (t *tasks) ExecInSeries(args ...reflect.Value) ([]interface{}, error) {
 }
 
 // ExecInParallel executes all functions in the stack in Parallel.
-func (t *tasks) ExecConcurrent(parallel bool) error {
+func (t *tasks) ExecConcurrent(parallel bool) (Results, error) {
 	var (
-		errs Errors
+		results Results
+		errs    Errors
 		// Length of the tasks to execute
 		ls = len(t.Stack)
 		// Creates buffered channel for errors
@@ -123,11 +178,14 @@ func (t *tasks) ExecConcurrent(parallel bool) error {
 		}
 	}
 
+	//results = sliceResults{[]interface{}{1}}
+	results = mapResults{"test": []interface{}{1}}
+
 	if len(errs) == 0 {
-		return nil
+		return results, nil
 	}
 
-	return errs
+	return results, errs
 }
 
 // Executes the task and consumes the message of `sem` channel

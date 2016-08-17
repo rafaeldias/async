@@ -13,9 +13,15 @@ func fib(p, c int) (int, int) {
 }
 
 func TestAsync(t *testing.T) {
+	var (
+		e        error
+		multiRes Results
+		res      []interface{}
+	)
+
 	fmt.Println("Testing `Waterfall`")
 
-	res, e := Waterfall(Tasks{
+	res, e = Waterfall(Tasks{
 		fib, fib, fib,
 		func(p, c int) int {
 			return c
@@ -32,7 +38,7 @@ func TestAsync(t *testing.T) {
 
 	runtime.GOMAXPROCS(2)
 
-	e = Parallel(Tasks{
+	multiRes, e = Parallel(Tasks{
 		func() {
 			for i := 'a'; i < 'a'+26; i++ {
 				fmt.Printf("%c ", i)
@@ -55,7 +61,9 @@ func TestAsync(t *testing.T) {
 		t.Errorf("Error executing a Waterfall (%s)", e.Error())
 	}
 
-	runtime.GOMAXPROCS(runtime.NumCPU())
+	fmt.Println("Parallel Result", multiRes.Len())
+
+	/*runtime.GOMAXPROCS(runtime.NumCPU())
 
 	fmt.Printf("\nTesting `Concurrent`\n")
 
@@ -80,7 +88,7 @@ func TestAsync(t *testing.T) {
 
 	if e != nil {
 		t.Errorf("Error executing a Waterfall (%s)", e.Error())
-	}
+	}*/
 }
 
 func TestAsyncError(t *testing.T) {
