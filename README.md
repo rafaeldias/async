@@ -36,6 +36,7 @@ async.Waterfall(tasks async.Tasks, args ...interface{}) ([]interface[}, error)
 ```
 
 Waterfall will execute all the functions in sequence, each returning their results to the next. If the last returning value of the function is of type `error`, then this value will not be passed to the next function. 
+
 If an error occur in any of the functions to be executed, the next function will not be executed, and the error will be returned to the caller. See [returning error](#returning-error).
 
 - `tasks` is a slice of functions that will be executed in series.
