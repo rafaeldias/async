@@ -21,7 +21,6 @@ Waterfall will execute all the functions in sequence, each returning their resul
 Waterfall returns the results of the last task as a `[]interface{}` and `error`.
 
 
-
 ### <a name="returning-error"></a>Returning error
 
 If an error occur in any of the functions to be executed, the next function will not be executed, and the error will be returned to the caller.

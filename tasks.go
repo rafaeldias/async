@@ -97,23 +97,31 @@ func (t *tasks) ExecConcurrent(parallel bool) error {
 		ls = len(t.Stack)
 		// Creates buffered channel for errors
 		ce = make(chan error, ls)
-		// Number of how many operating system threads Go will use to execute code
-		nCPU = runtime.GOMAXPROCS(0)
 		// Creates bufferd channel for controlling CPU usage and guarantee Paralellism
-		c int
+		sem = make(chan int, runtime.GOMAXPROCS(0))
 	)
 
-	for i := 0; i < ls; c, i = c+1, i+1 {
-		// If max operating system threads reached, consumes them before continuing
-		if parallel && c == nCPU {
-			errs = consumeCh(errs, nCPU, ce)
-			c = 0
+	// If parallel, tries to distribute the go routines among the cores, creating
+	// at most `runtime.GOMAXPROCS` go routine.
+	if parallel {
+		for i := 0; i < ls; i++ {
+			// Fill the buffered channel, if it gets full, go will block the execution
+			// until any routine frees the channel
+			sem <- 1 // the value doesn't matters
+			go execRoutineParallel(t.Stack[i], ce, sem)
 		}
-		go execRoutine(t.Stack[i], ce)
+	} else {
+		for i := 0; i < ls; i++ {
+			go execRoutine(t.Stack[i], ce)
+		}
 	}
 
 	// Consumes the errors from the channel
-	errs = consumeCh(errs, c, ce)
+	for i := 0; i < ls; i++ {
+		if e := <-ce; e != nil {
+			errs = append(errs, e)
+		}
+	}
 
 	if len(errs) == 0 {
 		return nil
@@ -122,17 +130,16 @@ func (t *tasks) ExecConcurrent(parallel bool) error {
 	return errs
 }
 
-func consumeCh(errs Errors, lr int, ce chan error) Errors {
-	// Consumes the errors from the channel
-	for i := 0; i < lr; i++ {
-		if e := <-ce; e != nil {
-			errs = append(errs, e)
-		}
-	}
+// Executes the task and consumes the message of `sem` channel
+func execRoutineParallel(f reflect.Value, c chan error, sem chan int) {
+	// execute routine
+	execRoutine(f, c)
 
-	return errs
+	// Once the task has done its job, consumes message from channel `sem`
+	<-sem
 }
 
+// Executes the task and sends error to the `c` channel
 func execRoutine(f reflect.Value, c chan error) {
 	var (
 		resErr error
@@ -145,6 +152,6 @@ func execRoutine(f reflect.Value, c chan error) {
 			resErr = e
 		}
 	}
-	// Sends message to the channel
+	// Sends message to the error channel
 	c <- resErr
 }
