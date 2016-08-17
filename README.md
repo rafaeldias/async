@@ -35,7 +35,8 @@ All errors occured in the functions will be returned. See [returning error](#ret
 async.Waterfall(tasks async.Tasks, args ...interface{}) ([]interface[}, error)
 ```
 
-Waterfall will execute all the functions in sequence, each returning their results to the next. If the last returning value of the function is of type `error`, then this value will not be passed to the next function, see [returning error](#returning-error) .
+Waterfall will execute all the functions in sequence, each returning their results to the next. If the last returning value of the function is of type `error`, then this value will not be passed to the next function. 
+If an error occur in any of the functions to be executed, the next function will not be executed, and the error will be returned to the caller. See [returning error](#returning-error).
 
 - `tasks` is a slice of functions that will be executed in series.
 - `args` are optional parameters that will be passed to the first task.
@@ -43,8 +44,6 @@ Waterfall will execute all the functions in sequence, each returning their resul
 Waterfall returns the results of the last task as a `[]interface{}` and `error`. 
 
 ### <a name="returning-error"></a>Returning error
-
-If an error occur in any of the functions to be executed, the next function will not be executed, and the error will be returned to the caller.
 
 In order for async to identify if an error occured, the error **must** be the last returning value of the function:
 
@@ -79,7 +78,7 @@ If errors occur in any function executed by `Concurrent` or `Parallel` an instan
 if it's not type cast it to `async.Errors`:
 
 ```go
-err : = async.Parallel(func1, func2, ...funcN)
+err : = async.Parallel(async.Tasks{func1, func2, ...funcN})
 
 if err != nil {
         parallelErrors := err.(async.Errors)
