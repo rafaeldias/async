@@ -24,7 +24,7 @@ async.Parallel(tasks async.Tasks) error
 ```
 
 Parallel will execute all the functions in parallel. It creates multiple goroutines and distributes the functions execution among them.
-The number of goroutines  defaults to `runtime.GOMAXPROCS`. If the number of goroutines is equal to `GOMAXPROCS` and there're more functions to execute, these functions will wait until one of functions being executed finishes its job.
+The number of goroutines  defaults to `GOMAXPROCS`. If the number of goroutines is equal to `GOMAXPROCS` and there're more functions to execute, these functions will wait until one of functions being executed finishes its job.
 
 All errors occured in the functions will be returned. See [returning error](#returning-error) and [consuming error](#consuming-error).
 
