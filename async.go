@@ -97,23 +97,3 @@ func execConcurrentStack(stack taskier, parallel bool) (Results, error) {
 	}
 	return f.ExecConcurrent(parallel)
 }
-
-// Loop through the stack of Tasks and check if they are valid functions.
-// Returns the functions as []reflect.Value and error
-func validFuncs(stack Tasks) ([]reflect.Value, error) {
-	var (
-		l  = len(stack)
-		rf = make([]reflect.Value, l)
-	)
-	// Checks if arguments passed are valid functions.
-	for i := 0; i < l; i++ {
-		v := reflect.Indirect(reflect.ValueOf(stack[i]))
-
-		if v.Kind() != reflect.Func {
-			return rf, fmt.Errorf("%T must be a Function ", v)
-		}
-
-		rf = append(rf, v)
-	}
-	return rf, nil
-}

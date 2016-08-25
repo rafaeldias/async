@@ -38,22 +38,26 @@ func TestAsync(t *testing.T) {
 
 	runtime.GOMAXPROCS(2)
 
-	multiRes, e = Parallel(Tasks{
-		func() {
+	multiRes, e = Parallel(MapTasks{
+		"one": func() error {
 			for i := 'a'; i < 'a'+26; i++ {
 				fmt.Printf("%c ", i)
 			}
+			return fmt.Errorf("Error in one function")
 		},
-		func() {
+		"two": func() (int, string, error) {
 			time.Sleep(2 * time.Microsecond)
 			for i := 0; i < 27; i++ {
 				fmt.Printf("%d ", i)
 			}
+
+			return 2, "birulao", nil
 		},
-		func() {
+		"three": func() int {
 			for i := 'z'; i >= 'a'; i-- {
 				fmt.Printf("%c ", i)
 			}
+			return 3
 		},
 	})
 
@@ -61,7 +65,7 @@ func TestAsync(t *testing.T) {
 		t.Errorf("Error executing a Parallel (%s)", e.Error())
 	}
 
-	fmt.Println("Parallel Result", multiRes)
+	fmt.Println("Parallel Result", multiRes.Key("three"))
 
 	/*runtime.GOMAXPROCS(runtime.NumCPU())
 
