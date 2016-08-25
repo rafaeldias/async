@@ -58,10 +58,10 @@ func TestAsync(t *testing.T) {
 	})
 
 	if e != nil {
-		t.Errorf("Error executing a Waterfall (%s)", e.Error())
+		t.Errorf("Error executing a Parallel (%s)", e.Error())
 	}
 
-	fmt.Println("Parallel Result", multiRes.Len())
+	fmt.Println("Parallel Result", multiRes)
 
 	/*runtime.GOMAXPROCS(runtime.NumCPU())
 
