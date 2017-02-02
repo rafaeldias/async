@@ -64,7 +64,7 @@ func Waterfall(stack Tasks, firstArgs ...interface{}) ([]interface{}, error) {
 	f.Stack, err = stack.GetFuncs()
 
 	if err != nil {
-		return emptyResult, err
+		panic(err.Error())
 	}
 
 	// transform interface{} to reflect.Value for execution
@@ -93,7 +93,7 @@ func execConcurrentStack(stack taskier, parallel bool) (Results, error) {
 	f.Stack, err = stack.GetFuncs()
 
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 	return f.ExecConcurrent(parallel)
 }

@@ -17,6 +17,7 @@ func TestAsync(t *testing.T) {
 		e        error
 		multiRes Results
 		res      []interface{}
+		keyRes   = "two"
 	)
 
 	fmt.Println("Testing `Waterfall`")
@@ -43,7 +44,7 @@ func TestAsync(t *testing.T) {
 			for i := 'a'; i < 'a'+26; i++ {
 				fmt.Printf("%c ", i)
 			}
-			return fmt.Errorf("Error in one function")
+			return nil //fmt.Errorf("Error in one function")
 		},
 		"two": func() (int, string, error) {
 			time.Sleep(2 * time.Microsecond)
@@ -51,7 +52,7 @@ func TestAsync(t *testing.T) {
 				fmt.Printf("%d ", i)
 			}
 
-			return 2, "birulao", nil
+			return 2, "test", nil
 		},
 		"three": func() int {
 			for i := 'z'; i >= 'a'; i-- {
@@ -65,23 +66,27 @@ func TestAsync(t *testing.T) {
 		t.Errorf("Error executing a Parallel (%s)", e.Error())
 	}
 
-	fmt.Println("Parallel Result", multiRes.Key("three"))
+	fmt.Printf("Parallel Result key %s: %+v\n", keyRes, multiRes.Key(keyRes))
 
-	/*runtime.GOMAXPROCS(runtime.NumCPU())
+	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	fmt.Printf("\nTesting `Concurrent`\n")
 
-	e = Concurrent(Tasks{
-		func() {
+	multiRes, e = Concurrent(Tasks{
+		func() int {
 			for i := 'a'; i < 'a'+26; i++ {
 				fmt.Printf("%c ", i)
 			}
+
+			return 1
 		},
-		func() {
+		func() bool {
 			time.Sleep(3 * time.Microsecond)
 			for i := 0; i < 27; i++ {
 				fmt.Printf("%d ", i)
 			}
+
+			return false
 		},
 		func() {
 			for i := 'z'; i >= 'a'; i-- {
@@ -90,9 +95,11 @@ func TestAsync(t *testing.T) {
 		},
 	})
 
+	fmt.Println("Concurrent Result Index: 1", multiRes.Index(1))
+
 	if e != nil {
-		t.Errorf("Error executing a Waterfall (%s)", e.Error())
-	}*/
+		t.Errorf("Error executing a Concurrent (%s)", e.Error())
+	}
 }
 
 func TestAsyncError(t *testing.T) {
@@ -116,9 +123,9 @@ func TestAsyncError(t *testing.T) {
 	})
 
 	if e != nil {
-		fmt.Println("Error executing a Waterfall (%q)", e)
+		fmt.Printf("Error executing a Waterfall (%q)\n", e)
 	}
 
 	// should be empty
-	fmt.Println(res)
+	fmt.Printf("Waterfall result with error should be empty: %+v\n", res)
 }

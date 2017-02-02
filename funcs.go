@@ -2,7 +2,6 @@ package async
 
 import (
 	"bytes"
-	"errors"
 	"reflect"
 	"runtime"
 	"strings"
@@ -13,6 +12,7 @@ import (
 // and yet subscribe to the error interface
 type Errors []error
 
+// Prints all errors from asynchronous tasks separated by space
 func (e Errors) Error() string {
 	b := bytes.NewBufferString(emptyStr)
 
@@ -24,41 +24,55 @@ func (e Errors) Error() string {
 	return strings.TrimSpace(b.String())
 }
 
+// Results is an interface used to return sliceResult or mapResults
+// from asynchronous tasks. It has methods that should be used to
+// get data from the results.
 type Results interface {
-	Index(int) []interface{}
-	Key(string) []interface{}
-	Len() int
-	Keys() []string
+	Index(int) []interface{}  // Get value by index
+	Key(string) []interface{} // Get value by key
+	Len() int                 // Get the length of the result
+	Keys() []string           // Get the keys of the result
 }
 
+// sliceResults is a slice of slice of interface used to return
+// results from asynchronous tasks that were passed as slice.
 type sliceResults [][]interface{}
 
+// Returns the values returned from ith task
 func (s sliceResults) Index(i int) []interface{} {
 	return s[i]
 }
 
+// Returns the length of the results
 func (s sliceResults) Len() int {
 	return len(s)
 }
 
+// Not supported by sliceResults
 func (s sliceResults) Keys() []string {
 	panic("Cannot get map keys from Slice")
 }
 
+// Not supported by sliceResults
 func (s sliceResults) Key(k string) []interface{} {
 	panic("Cannot get map key from Slice")
 }
 
+// sliceResults is a map of string of slice of interface used to return
+// results from asynchronous tasks that were passed as map of string.
 type mapResults map[string][]interface{}
 
+// Not supported by mapResults
 func (m mapResults) Index(i int) []interface{} {
 	panic("Cannot get index from Map")
 }
 
+// Returns the length of the results
 func (m mapResults) Len() int {
 	return len(m)
 }
 
+// Returns the keys of the result map
 func (m mapResults) Keys() []string {
 	var keys = make([]string, len(m))
 
@@ -71,10 +85,12 @@ func (m mapResults) Keys() []string {
 	return keys
 }
 
+// Returns the result value by key
 func (m mapResults) Key(k string) []interface{} {
 	return m[k]
 }
 
+// Internal usage to gather results from tasks
 type execResult struct {
 	err     error
 	results []reflect.Value
@@ -155,7 +171,7 @@ func (f *funcs) ExecConcurrent(parallel bool) (Results, error) {
 		results, errs = execMap(mapFuncs, parallel)
 	} else {
 		// Incorret t.Stack type
-		return results, errors.New("Stack type must be of type []reflect.Value or map[string]reflect.Value.")
+		panic("Stack type must be of type []reflect.Value or map[string]reflect.Value.")
 	}
 
 	if len(errs) == 0 {
@@ -179,7 +195,7 @@ func execSlice(funcs []reflect.Value, parallel bool) (sliceResults, Errors) {
 		for i := 0; i < ls; i++ {
 			// Fill the buffered channel, if it gets full, go will block the execution
 			// until any routine frees the channel
-			sem <- 1 // the value doesn't matters
+			sem <- 1 // the value doesn't matter
 			go execRoutineParallel(funcs[i], cr, sem, emptyStr)
 		}
 	} else {
@@ -221,7 +237,7 @@ func execMap(funcs map[string]reflect.Value, parallel bool) (mapResults, Errors)
 		for k, f := range funcs {
 			// Fill the buffered channel, if it gets full, go will block the execution
 			// until any routine frees the channel
-			sem <- 1 // the value doesn't matters
+			sem <- 1 // the value doesn't matter
 			go execRoutineParallel(f, cr, sem, k)
 		}
 	} else {
