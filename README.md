@@ -123,7 +123,7 @@ If errors occur in any function executed by `Concurrent` or `Parallel` an instan
 if it's not type cast it to `Errors`:
 
 ```go
-err : = async.Parallel(async.Tasks{func1, func2, ...funcN})
+_, err : = async.Parallel(async.Tasks{func1, func2, ...funcN})
 
 if err != nil {
         parallelErrors := err.(async.Errors)
