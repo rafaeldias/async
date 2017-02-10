@@ -102,6 +102,75 @@ func TestAsync(t *testing.T) {
 	}
 }
 
+func TestAsyncRace(t *testing.T) {
+	fmt.Printf("\nTesting `Race`\n")
+
+	res, e := Race(Tasks{
+		func() (int, error) {
+			time.Sleep(2 * time.Second)
+			fmt.Println("First Race Func")
+			return 1, nil
+
+		},
+		func() (int, error) {
+			time.Sleep(5 * time.Second)
+			fmt.Println("Second Race Func")
+			return 0, errors.New("Error on second function")
+		},
+	})
+
+	if e != nil {
+		fmt.Printf("Error executing a Race (%q)\n", e)
+	}
+
+	fmt.Println("Results from `Race`: %+v", res)
+
+}
+
+func TestAsyncAuto(t *testing.T) {
+	fmt.Printf("\nTesting `Auto`\n")
+
+	res, e := Auto(MapTasks{
+		"getData": func() (int, error) {
+			for i := 'a'; i < 'a'+26; i++ {
+				fmt.Printf("%c ", i)
+			}
+
+			fmt.Println("getData")
+			return 1, nil //errors.New("Error on first function")
+		},
+		"makeFolder": func() (int, error) {
+			time.Sleep(3 * time.Microsecond)
+			for i := 0; i < 27; i++ {
+				fmt.Printf("%d ", i)
+			}
+
+			fmt.Println("makeFolder")
+			return 1, nil //errors.New("Error on second function")
+		},
+		"writeFile": Tasks{"getData", "makeFolder", func(res Results) (int, error) {
+			var (
+				g = res.Key("getData")
+				m = res.Key("makeFolder")
+			)
+
+			fmt.Printf("%+v\n", res)
+
+			return g[0].(int) + m[0].(int), nil
+		}},
+		"readFile": Tasks{"writeFile", func(res Results) error {
+			fmt.Printf("%+v\n", res)
+			return nil
+		}},
+	})
+
+	if e != nil {
+		fmt.Printf("Error executing a Auto (%q)\n", e)
+	}
+
+	fmt.Println("Results from `Auto`: %+v\n", res)
+}
+
 func TestAsyncError(t *testing.T) {
 	fmt.Printf("\nTesting `Waterfall` with error\n")
 

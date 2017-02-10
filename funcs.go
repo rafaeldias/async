@@ -74,16 +74,16 @@ func (f *funcs) ExecInSeries(args ...reflect.Value) ([]interface{}, error) {
 }
 
 // ExecInParallel executes all functions in the stack in Parallel.
-func (f *funcs) ExecConcurrent(parallel bool) (Results, error) {
+func (f *funcs) ExecConcurrent(parallel, race bool) (Results, error) {
 	var (
 		results Results
 		errs    Errors
 	)
 
 	if funcs, ok := f.Stack.([]reflect.Value); ok {
-		results, errs = execSlice(funcs, parallel)
+		results, errs = execSlice(funcs, parallel, race)
 	} else if mapFuncs, mapOk := f.Stack.(map[string]reflect.Value); mapOk {
-		results, errs = execMap(mapFuncs, parallel)
+		results, errs = execMap(mapFuncs, parallel, race)
 	} else {
 		// Incorret t.Stack type
 		panic("Stack type must be of type []reflect.Value or map[string]reflect.Value.")
@@ -96,7 +96,7 @@ func (f *funcs) ExecConcurrent(parallel bool) (Results, error) {
 	return results, errs
 }
 
-func execSlice(funcs []reflect.Value, parallel bool) (sliceResults, Errors) {
+func execSlice(funcs []reflect.Value, parallel, race bool) (sliceResults, Errors) {
 	var (
 		errs    Errors
 		results = sliceResults{}
@@ -132,12 +132,16 @@ func execSlice(funcs []reflect.Value, parallel bool) (sliceResults, Errors) {
 			}
 			results = append(results, res)
 		}
+
+		if race {
+			return results, errs
+		}
 	}
 
 	return results, errs
 }
 
-func execMap(funcs map[string]reflect.Value, parallel bool) (mapResults, Errors) {
+func execMap(funcs map[string]reflect.Value, parallel, race bool) (mapResults, Errors) {
 	var (
 		errs    Errors
 		results = mapResults{}
@@ -172,6 +176,10 @@ func execMap(funcs map[string]reflect.Value, parallel bool) (mapResults, Errors)
 				res[j] = v.Interface()
 			}
 			results[r.key] = res
+		}
+
+		if race {
+			return results, errs
 		}
 	}
 
